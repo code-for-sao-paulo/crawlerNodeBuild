@@ -2,20 +2,11 @@ var request = require('request');
 var cheerio = require('cheerio');
 var URL = require('url-parse');
 
-/*var uri = "https://www.codeforamerica.org/brigade/projects";
-console.log("Acessando: " + uri);
-request(uri, function(error, response, body) {
-   if(error) {
-     console.log("Erro: " + error);
-   }
-   // Check status code (200 is HTTP OK)
-   console.log("Status: " + response.statusCode);
-   if(response.statusCode === 200) {
-     // Parse the document body
-     var $ = cheerio.load(body);
-     console.log("Page title:  " + $('title').text());
-   }
-});*/
+var access_token = 'EAAS0aIMAt4kBAJPWZBn4ZC2N5wl8uYZCAzystVCi8MUDPxnKyUq7iSUMXKi9SqgtdqxvoW7dHmVmyDWDwg0qZCYhONha3D1kLbBI1D2QsAbDQUQxx0F3zjCl5ZByuZB5fNzEoSYwz6z9IGomT1XBHj9123hTEmxZBJZAh5FwsIbMXwZDZD';
+var parameters = "id,name,feed{message,comments{comment_count,like_count}}";
+var candidate = 'fernandoHaddad';
+
+query_data_from_candidate(candidate, parameters, access_token);
 
 /*
 var accessToken;
@@ -31,50 +22,44 @@ FB.api('oauth/access_token', {
     accessToken = res.access_token;
 });
 */
-var access_token = 'EAACEdEose0cBALsJS443oKOYaNfSZB1nuwniBnmt29iqBsvN7Rfgo81LiYwGJAmd3hK7avv7XMpH5GZAXvxY28ZAGWxW6XHODWFoL7Lad1CPqpOjgfd1XseSCVq8EdLoZCXc0ZBgyDa2F2BqyjDmKIuIlVWQ7BtZCnJXDPrGBHZBgZDZD';
-var parameters = "id,name,feed{message,comments{comment_count,like_count}}";
-var candidate = 'fernandoHaddad';
-
-query_data_from_candidate(candidate, parameters, access_token);
 
 function query_data_from_candidate(user, parameters, access_token) {
   var FB = require('fb');
+
   FB.setAccessToken(access_token);
+
   FB.api(
     '/' + user,
     'GET',
     { "fields": parameters },
     function (response) {
-      response.feed.data.forEach(function (element) {
-        console.log("Mensagem do feed: "+element.message);
-        var total_comments=0,total_likes=0;
-        element.comments.data.forEach(function (element) {
+      var feedItems;
+
+      if (response && response.error) {
+        console.log('Erro na chamada do facebook !');
+        console.log(response.error);
+        return;
+      }
+
+      feedItems = response.feed.data;
+
+      feedItems.forEach(function (feedItem) {
+        console.log("Mensagem do feed: " + feedItem.message);
+
+        var total_comments = 0;
+        var total_likes = 0;
+
+        var comments = feedItem.comments.data;
+
+        comments.forEach(function (element) {
           total_comments += element.comment_count;
           total_likes += element.like_count;
-        }, this);
-        console.log("Total de comentários: "+total_comments);
-        console.log("Total de likes: "+total_likes);
+        });
+
+        console.log("Total de comentários: " + total_comments);
+        console.log("Total de likes: " + total_likes);
         console.log('-------------------------------------------');
-      }, this);
-      
-      //console.log(response.feed.data[1].comments.data[0]);
+      });
     }
   );
 }
-
-/*FB.api(
-  '',
-  'POST',
-  {
-    batch:[
-      { method:'get',relative_url:'/fernandohaddad' },
-      { method:'get',relative_url:'/fernandohaddad/feed?{message,comments{comment_cont,like_count}}' },
-    ]
-  },
-  function(response) {
-    var res0, res1;
-    res0 = JSON.parse(response[0].body);
-    res1 = JSON.parse(response[1].body);
-    console.log(res1);
-  }
-);*/
